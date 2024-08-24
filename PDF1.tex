@@ -1,0 +1,154 @@
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage{color}
+\usepackage[UTF8]{ctex}
+
+\begin{document}
+
+ \title{实验报告}
+ \author{闫皓}
+ \date{\today}
+ \maketitle
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+  \section{实验内容}
+    \subsection{Git}
+\noindent(1){\color{blue}\$ git config --global user.name"ICEY"}\\
+设置本地仓库使用者昵称为“ICEY”。\\
+
+\noindent(2){\color{blue}\$ git config --global user.email"3159578840@qq.com"}\\
+设置本地仓库使用者的邮箱为“3159578840@qq.com”。\\
+
+\noindent(3){\color{blue}\$ git init}\\
+初始化本地仓库。\\
+
+\noindent(4){\color{blue}\$ touch file01.txt}\\
+在工作目录创建一个文件。\\
+
+\noindent(5){\color{blue}\$ git status}\\
+查看提交状态，显示“Untracked files”显示未跟踪，处于工作区的文件。\\
+
+\noindent(6){\color{blue}\$ git add .}\\
+将处于工作区的文件“file01.txx”添加到暂存区。\\
+
+\noindent(7){\color{blue}\$ git commit -m "add file01"}\\
+将处于暂存区的文件“file01.txt”提交到本地仓库当中，此时使用“git status"显示：\\
+On branch master\\
+nothing to commit, working tree clean。\\
+
+\noindent(8){\color{blue}\$ git log}\\
+查看提交记录，显示：\\
+commit aeb38f5ad7b13940f9ef541d5a3c42c4074c6f85 (HEAD -> master)\\
+Author: ICEY <3159578840@qq.com>\\
+Date:   Fri Aug 23 18:57:41 2024 +0800\\
+    add file01\\
+
+\noindent(9){\color{blue}\$ git add .}\\
+git commit -m "update file01"\\
+使用vi编辑器对“file01.txt”进行一次更新，然后添加到暂存区，上传到本地仓库。\\
+
+\noindent(10){\color{blue}\$ alias git-log='git log --pretty=oneline --all --graph --abbrev-commit'}\\
+对查看提交日志进行优化，使用alias改写功能，效果如下\\
+\$ git-log\\
+* 75d8fe0 (HEAD -> master) update file01\\
+* aeb38f5 \\
+add file01\\
+
+\noindent(11){\color{blue}\$ git reset --hard aeb38f5}\\
+返回到之前提交的旧版本，此时\$ git blog 显示的内容为：\\
+* aeb38f5 (HEAD -> master) add file01\\
+
+\noindent(12){\color{blue}\$ git reflog}\\
+返回所有的历史提交，内容为：\\
+aeb38f5 (HEAD -> master) HEAD@{0}: reset: moving to aeb38f5\\
+75d8fe0 HEAD@{1}: commit: update file01\\
+aeb38f5 (HEAD -> master) HEAD@{2}: commit (initial): add file01\\
+
+
+
+\subsection{LaTeX}
+\noindent(1) \texttt{documentclass[a4paper, 12pt]\{article\}} \\
+\texttt{documentclass} 后面的方括号内的两个参数分别代表纸张大小为 A4，字体大小为 12pt。花括号内则指定文档类型为 article。\\
+
+\noindent(2) \texttt{usepackage\{color\}} \\
+\texttt{usepackage[UTF8]\{ctex\}} \\
+\texttt{usepackage\{color\}} 用来引用设置字体颜色的包；\texttt{usepackage[UTF8]\{ctex\}} 用于使用 CTeX 宏包。\\
+
+\noindent(3) \texttt{begin\{document\}} \\
+\texttt{end\{document\}} \\
+\texttt{begin\{document\}} 和 \texttt{end\{document\}} 命令将你的文本内容包裹起来。任何在 \texttt{begin\{document\}} 之前的文本都被视为前导命令，会影响整个文档。任何在 \texttt{end\{document\}} 之后的文本都会被忽视。\\
+
+\noindent(4) \texttt{title\{实验报告\}} \\
+\texttt{author\{闫皓\}} \\
+\texttt{date\{\textbackslash today\}} \\
+\texttt{maketitle} \\
+通过上述代码分别设置文章的标题、作者姓名和日期，并通过 \texttt{maketitle} 命令生成标题。\\
+
+\noindent(5) \texttt{section\{实验内容\}} \\
+\texttt{subsection\{Git\}} \\
+设置节“实验内容”和小节“Git”。\\
+
+\noindent(6) \texttt{pagenumbering\{roman\}} \\
+\texttt{tableofcontents} \\
+\texttt{newpage} \\
+\texttt{pagenumbering\{arabic\}} \\
+首先将页码设置为罗马数字，然后创建目录，接着另起一个页面，将页码设置为阿拉伯数字。\\
+
+\noindent(7) \texttt{\textbackslash textcolor\{blue\}\{\$ git init\}} \\
+将这句 Git 代码的颜色设置为蓝色。\\
+
+\noindent(8) \texttt{\textbackslash noindent\{\textbackslash textcolor\{blue\}\{\$ git config --global user.name "ICEY"\}\}} \\
+取消这一段的首行缩进，并将这句 Git 代码的颜色设置为蓝色。\\
+\noindent(9)\texttt{表格实践：}\\
+\begin{tabular}{l|r|r}
+Item			& Quantity 	& Price\$\\
+\hline
+Nails			& 500	& 0.34\\
+Wooden boards	& 100	&4.00\\
+Bricks		&240		&11.50\\
+\end{tabular}
+
+\begin{tabular}{l|ccc}
+	& \multicolumn{3}{l}{Year} \\
+\cline{2-4}
+City		& 2006	& 2007	& 2008 \\
+\hline
+London	& 45789	& 46511	& 51298 \\
+Berlin	& 34549	& 32543	& 29870 \\
+Paris		& 49835	& 51009	& 51970 \\
+\end{tabular}
+
+\noindent(10)\texttt{数学符号实践：}\\
+e = m$c^2$\\
+$\pi = \frac{c}{d}$\\
+$\frac{d}{dx}e^x= e^2$\\
+$\frac{d}{dx}\int_0^\infty f(s)ds = f(x)$\\
+f(x) = $\sum_i 0^\infty\frac{f^(i)(0)}{i!}x^i$\\
+x = $\sqrt{\frac{x_i}{z}y}$\\
+
+\noindent(11)\texttt{插入公式实践：}\\
+\begin{eqnarray}
+a & = & b + c \\
+   & = & y - z \\
+\end{eqnarray}
+
+\noindent(12)\texttt{调整字体大小实践：}\\
+normal size words\\
+{\tiny tiny words}\\
+{\scriptsize scriptsize words}\\
+{\footnotesize footnotesize words}\\
+{\small small words}\\
+{\large large words}\\
+{\huge huge words}\\
+
+\section{实验感悟}
+\noindent \texttt{在本次实验中，我通过学习和实践，进一步加深了对Git和LaTeX这两种工具的理解。}\\
+\texttt{首先，通过Git的学习和操作，我对版本控制有了更深入的认识。Git作为一款强大的分布式版本控制系统，它不仅能够记录代码的每一次更改，还能让我方便地在不同版本之间切换和管理。在实验中，通过配置用户名和邮箱、初始化仓库、创建和提交文件等操作，我理解了Git的基本工作流程，并且掌握了查看提交历史、重置版本等更高级的功能。这些技能将为我今后的代码管理和协作开发提供有力支持。}\\
+\texttt{其次，通过LaTeX的学习，我掌握了文档排版的基本技能。LaTeX是一种功能强大的排版工具，尤其适用于撰写科技论文、实验报告等需要精美排版的文档。在实验中，我学习了如何使用不同的命令来设置文档的结构、颜色、表格、数学公式等，理解了LaTeX文档的基本结构和常用指令的用法。通过这些实践，我能够更加高效地创建和排版符合专业标准的文档。}\\
+\texttt{总体来说，本次实验不仅提升了我对Git和LaTeX的操作能力，更重要的是让我意识到工具在提高工作效率和保证工作质量方面的重要性。今后，我将继续深入学习这些工具，以进一步提升自己的技术能力和专业素养。}\\
+
+\end{document}
