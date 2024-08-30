@@ -1,0 +1,392 @@
+\documentclass[a4paper, 12pt]{article}
+\setlength{\parindent}{0pt}
+\usepackage[UTF8]{ctex}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\setlength{\parskip}{0pt}
+
+
+\begin{document}
+\title{实验报告}
+\author{闫皓}
+\date{\today}
+\maketitle
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+{\color{red}https://github.com/ICEY-bit926/Test01.git}
+
+\section{实验内容}
+\subsection{Sheep}
+(1) 实例一
+\begin{Verbatim}
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ foo=bar
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ echo "$foo"
+bar
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ echo '$foo'
+$foo
+\end{Verbatim}
+
+\texttt{{\color{blue}Bash 中的字符串通过 ' 和 " 分隔符来定义，但是它们的含义并不相同。以 ' 定义的字符串为原义字符串，其中的变量不会被转义，而 " 定义的字符串会将变量值进行替换。} }
+
+(2)实例二
+\begin{Verbatim}
+31595@ICEY MINGW64 /d/Desktop
+$ mcd () {
+> mkdir -p "$1"
+> cd "$1"
+> }
+31595@ICEY MINGW64 /d/Desktop
+$ mcd hello
+\end{Verbatim}
+
+\texttt{{\color{blue}定义一个函数，它会创建一个文件夹并使用 cd 进入该文件夹。}}
+
+(3)实例三
+\begin{Verbatim}
+31595@ICEY MINGW64 /d/Desktop/hello
+$ false || echo "Oops, fail"
+Oops, fail
+
+31595@ICEY MINGW64 /d/Desktop/hello
+$ true || echo "Will not be print"
+
+31595@ICEY MINGW64 /d/Desktop/hello
+$ true && echo "Things went well"
+Things went well
+
+31595@ICEY MINGW64 /d/Desktop/hello
+$ false && echo "Will not be printed"
+
+31595@ICEY MINGW64 /d/Desktop/hello
+$ false ; echo "This will always run"
+This will always run
+\end{Verbatim}
+
+{\color{blue}
+\&\&（与操作符）：只有前一个命令成功（即返回码为 0）时，才会执行后一个命令。\\
+||（或操作符）：只有前一个命令失败（即返回码非 0）时，才会执行后一个命令。\\
+;（分号）：无论前一个命令是否成功，分号后的命令都会执行。\\
+
+1.false || echo "Oops, fail"\\
+false 返回 1（非 0，表示失败），所以 || 右侧的 echo "Oops, fail" 被执行。\\
+输出：Oops, fail\\
+
+2.true || echo "Will not be printed"\\
+true 返回 0（表示成功），所以 || 右侧的 echo 不执行。\\
+输出：无输出\\
+
+3.true \&\& echo "Things went well"\\
+true 返回 0（表示成功），所以 \&\& 右侧的 echo "Things went well" 被执行。\\
+输出：Things went well\\
+
+4.false \&\& echo "Will not be printed"\\
+false 返回 1（表示失败），所以 \&\& 右侧的 echo 不执行。\\
+输出：无输出\\
+
+5.false ; echo "This will always run"\\
+false 返回 1（表示失败），但 ; 之后的命令不受影响，无论 false 成功与否，echo "This will always run" 都会执行。\\
+输出：This will always run\\
+}
+(4)实例四
+\begin{Verbatim}
+31595@ICEY MINGW64 /d/Desktop/hello
+$ echo "Starting program at $(date)"
+Starting program at Fri Aug 30 16:14:01     2024
+
+31595@ICEY MINGW64 /d/Desktop/hello
+$ echo "Running program $0 with $# arguments with pid $$"
+Running program /usr/bin/bash with 0 arguments with pid 683
+\end{Verbatim}
+{\color{blue}
+命令替换 (Command Substitution):\\
+\$(date) 将 date 命令的输出结果（当前日期和时间）替换到脚本中的对应位置。\\
+示例：echo "Starting program at \$(date)" 会打印类似 "Starting program at Fri Aug 30 12:34:56 UTC 2024" 的输出。\\
+
+变量解释:\\
+\$0: 当前脚本的文件名。\\
+\$\#: 传递给脚本的参数个数。\\
+\$\$: 当前进程的 PID (进程 ID)。\\
+}
+(5)实例五
+\begin{Verbatim}
+31595@ICEY MINGW64 /d/Desktop/hello
+$ for file in "$@"; do
+> grep footbar "$file" > /dev/null 2> /dev/null
+> if [[ $? -ne 0 ]]; then
+> echo "File $file does not have any foobar, adding one"
+> echo "# foobar" >> "$file"
+> fi
+> done
+\end{Verbatim}
+{\color{blue}
+循环遍历参数:\\
+for file in "\$@"; do ... done 会遍历所有传递给脚本的参数（每个参数通常是一个文件名）。\\
+
+条件检查:\\
+grep foobar "\$file" > /dev/null 2> /dev/null 会在当前文件中搜索字符串 "foobar"。输出和错误信息都被重定向到 /dev/null，所以它们不会显示在终端中。\\
+if [[ \$? -ne 0 ]]; then ... fi 判断 grep 的退出状态。如果 grep 找不到字符串 "foobar"，它会返回一个非零值，这意味着没有找到匹配。\\
+
+追加注释:\\
+echo "\# foobar" >> "\$file" 如果没有找到 "foobar"，脚本会在文件末尾追加 \# foobar 这一行。\\
+}
+(6)实例六
+\begin{Verbatim}
+31595@ICEY MINGW64 /d/Desktop/hello
+$ ls --help
+\end{Verbatim}
+{\color{blue}
+查看“ls”的说明书。}
+
+(7)实例七
+\begin{Verbatim}
+$ ls -laht --color=auto
+total 7.0K
+\end{Verbatim}
+{\color{blue}
+1.-l：使用长格式列出文件的详细信息（如权限、所有者、大小、修改时间等）。
+2.-a：列出所有文件，包括隐藏文件（以 . 开头的文件）。
+3.-h：以人类可读的格式显示文件大小（例如 454M 而不是 454279954）。
+4.-t：按文件的最近访问时间排序（ls 默认按文件修改时间排序）。
+5.--color=auto：以彩色显示输出（根据文件类型自动着色）。
+}
+
+(7)实例七
+\begin{Verbatim}
+# 保存当前工作目录
+marco() {
+    export MARCO_DIR="$(pwd)"
+}
+
+# 切换回保存的工作目录
+polo() {
+    if [ -n "$MARCO_DIR" ]; then
+        cd "$MARCO_DIR" || echo "Failed to cd to saved directory"
+    else
+        echo "No directory saved. Run 'marco' first."
+    fi
+31595@ICEY MINGW64 /d/Desktop/hello
+$ vim marco.sh
+31595@ICEY MINGW64 /d/Desktop/hello
+$ source marco.sh
+31595@ICEY MINGW64 /d/Desktop/hello
+$ marco
+31595@ICEY MINGW64 /d/Desktop/hello
+$ polo
+}
+\end{Verbatim}
+{\color{blue}
+marco 函数：\\
+使用 pwd 获取当前工作目录，并将其存储在环境变量 MARCO\_DIR 中。\\
+使用 export 命令确保 MARCO\_DIR 环境变量在当前 shell 会话中全局可用。\\
+
+polo 函数：\\
+首先检查 MARCO\_DIR 是否为空。如果不为空，执行 cd 命令切换到保存的目录。\\
+如果 MARCO\_DIR 为空，说明还没有运行过 marco，因此提示用户需要先运行 marco。\\
+}
+(8)实例八
+\begin{Verbatim}
+#!/usr/bin/env bash
+
+# 初始化变量
+count=0
+logfile="output.log"
+error_logfile="error.log"
+
+# 循环执行脚本，直到出错
+while true; do
+    ((count++))  # 增加运行次数
+    ./your_script.sh >> "$logfile" 2>> "$error_logfile"  # 记录标准输出和错误输出到不同的文件
+    
+    # 检查上一个命令的退出状态
+    if [[ $? -ne 0 ]]; then
+        echo "Script failed after $count runs."
+        echo "Standard Output:"
+        cat "$logfile"  # 打印标准输出日志
+        echo "Standard Error:"
+        cat "$error_logfile"  # 打印错误输出日志
+        break
+    fi
+done
+\end{Verbatim}
+{\color{blue}
+变量初始化：\\
+count=0：用于记录脚本执行的次数。\\
+logfile="output.log"：用于保存标准输出的日志文件。\\
+error\_logfile="error.log"：用于保存错误输出的日志文件。\\
+
+循环执行：\\
+使用 while true 使脚本在没有错误时无限循环执行。\\
+每次循环中，count 变量增加，记录当前执行次数。\\
+./your\_script.sh >> "\$logfile" 2>> "\$error\_logfile"：执行脚本，将标准输出追加到 output.log，将标准错误流追加到 error.log。\\
+
+检查退出状态：\\
+if [[ \$? -ne 0 ]]; then：检查上一个命令的退出状态。如果返回值不是 0，说明脚本执行失败。\\
+失败时，打印执行的次数，以及记录在日志文件中的标准输出和标准错误。\\
+break 退出循环。\\
+
+日志文件输出：\\
+使用 cat 命令打印日志文件中的内容。\\
+}
+(9)实例九
+\begin{Verbatim}
+find . -type f -name "*.html" -print0 | xargs -0 zip html_files.zip
+\end{Verbatim}
+{\color{blue}
+find . -type f -name "*.html" -print0:\\
+find .：从当前目录（.）开始递归查找文件。\\
+-type f：仅查找文件（不包括目录）。\\
+-name "*.html"：查找文件名以 .html 结尾的文件。\\
+-print0：输出结果时，以空字符（null character）为分隔符，而不是默认的换行符。这对于处理文件名中包含空格或特殊字符的情况非常有用。\\
+
+xargs -0 zip html\_files.zip:\\
+xargs -0：读取 find 命令的输出，并使用空字符作为分隔符。-0 选项确保了文件名中的空格和特殊字符不会导致问题。\\
+zip html\_files.zip：将所有找到的 HTML 文件压缩到一个名为 html\_files.zip 的 ZIP 文件中。\\
+}
+(10)实例十
+\begin{Verbatim}
+31595@ICEY MINGW64 /d/Desktop
+$ mkdir ouc
+
+31595@ICEY MINGW64 /d/Desktop
+$ cd ouc
+
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ touch hello.txt
+\end{Verbatim}
+{\color{blue}
+在桌面建一个名为“ouc”的文件夹，将当前目录改为“ouc”在文件夹中创建一个名为“hello.txt”的文本文档。\\
+}
+
+(11)实例十一
+\begin{Verbatim}
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ echo hello > hello.txt
+
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ cat hello.txt
+hello
+
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ cat < hello.txt > hello2.txt
+
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ cat hello2.txt
+hello
+
+31595@ICEY MINGW64 /d/Desktop/ouc
+$ rm hello2.txt
+\end{Verbatim}
+{\color{blue}
+把“hello”输出到“hello.txt"文件当中，再输出”hello.txt“文件的内容。\\
+把“hello.txt"文件的内容存入输出流中，在输出到”hello2.txt"文件当中，再将“hello.txt"文件的内容输出出来。\\
+}
+
+(12)实例十二
+\begin{Verbatim}
+# 删除全部扩展名为.tmp 的文件
+find . -name '*.tmp' -exec rm {} ;
+# 查找全部的 PNG 文件并将其转换为 JPG
+find . -name '*.png' -exec convert {} {}.jpg ;
+\end{Verbatim}
+
+\subsection{Vim}
+(1)实例一
+\begin{Verbatim}
+:%s/\<oldword\>/newword/gc
+\end{Verbatim}
+{\color{blue}
+解释：将当前文件中所有出现的 oldword 替换为 newword，并在每次替换前提示用户确认。\\
+}
+(2)实例二
+\begin{Verbatim}
+:g/^$/d
+\end{Verbatim}
+{\color{blue}
+解释：全局搜索空行并删除。\\
+}
+(3)实例三
+\begin{Verbatim}
+:g/string\_to\_delete/d
+\end{Verbatim}
+{\color{blue}
+解释：全局搜索包含 string\_to\_delete 的所有行并删除。\\
+}
+(4)实例四
+\begin{Verbatim}
+:retab
+\end{Verbatim}
+{\color{blue}
+解释：根据 expandtab 选项，将制表符转换为空格或相反操作。\\
+}
+(5)实例五
+\begin{Verbatim}
+:%s/\(.*\)/\L\1/
+\end{Verbatim}
+{\color{blue}
+解释：将整个文件的每一行都转换为小写。\\
+}
+(6)实例六
+\begin{Verbatim}
+:%s/^\(.*\)\n\1$/\1/
+\end{Verbatim}
+{\color{blue}
+解释：删除相邻的重复行（这是较简单的版本，复杂场景可能需要结合 sort 和 uniq 来处理）。\\
+}
+(7)实例七
+\begin{Verbatim}
+:w !diff % -
+\end{Verbatim}
+{\color{blue}
+解释：使用 diff 比较当前文件与指定文件（可在新标签页中打开并手动替换差异部分）。\\
+}
+(8)实例八
+\begin{Verbatim}
+"ayiw
+\end{Verbatim}
+{\color{blue}
+解释：将光标下的单词追加到 a 寄存器中，不会覆盖之前的内容。\\
+}
+(9)实例九
+\begin{Verbatim}
+:'<,'>!sort
+\end{Verbatim}
+{\color{blue}
+解释：将选中的文本块传递给外部命令 sort，并用排序后的结果替换原内容。\\
+}
+(10)实例十
+\begin{Verbatim}
+:argdo %s/oldword/newword/gc | update
+\end{Verbatim}
+{\color{blue}
+解释：在所有被缓冲的文件中查找并替换 oldword 为 newword，并保存修改。\\
+}
+(11)实例十一
+\begin{Verbatim}
+:%s/\<word_to_count\>//gn
+\end{Verbatim}
+{\color{blue}
+解释：统计并显示 word\_to\_count 在当前文件中出现的次数。\\
+}
+(12)实例十二
+\begin{Verbatim}
+:diffget /path/to/other/file
+\end{Verbatim}
+{\color{blue}
+解释：在 diff 模式下，从另一个文件中获取并合并差异。\\
+}
+
+\section{实验感悟}
+在今天的实验课上，我深入学习了Sheep和Vim两个工具。通过这次学习，我对它们的功能和应用有了更深的理解。\\
+
+首先是Sheep，它是一种极具效率的工具，能够帮助我们更好地管理和处理资源。通过实验操作，我体会到了Sheep在并行计算和资源调度中的重要性。它的灵活性和强大的功能，使得复杂的计算任务得以顺利完成。在实际操作中，我尝试了不同的配置，了解了Sheep在不同环境下的表现。这让我意识到，熟练掌握Sheep的配置和优化技巧，能大大提高工作效率。\\
+
+接着是Vim，这是一款经典的文本编辑器，虽然在使用初期感到有些复杂，但通过今天的练习，我逐渐掌握了它的基本命令和操作技巧。Vim的高效编辑模式和丰富的插件支持，给我留下了深刻的印象。尤其是在处理大规模文本和代码时，Vim的快捷操作极大地提升了我的编辑速度。在学习过程中，我还掌握了如何通过Vim进行查找和替换、如何使用寄存器、以及如何进行多文件编辑等高级技巧。\\
+
+\end{document}
