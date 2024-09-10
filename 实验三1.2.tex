@@ -1,0 +1,444 @@
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage[UTF8]{ctex}
+\usepackage{color}
+\usepackage{graphicx}
+
+\setlength{\parindent}{0pt}
+
+\begin{document}
+  \title{实验报告}
+  \author{闫皓}
+  \date{\today}
+  \maketitle
+{\color{red}https://github.com/ICEY-bit926/Test01.git}
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+  \section{实验内容}
+\subsection{shell命令行环境}
+(1)\begin{verbatim}
+sleep 10000
+Ctrl-Z
+bg
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+yh@yh-VMware-Virtual-Platform:~/桌面\$ sleep 10000
+\^Z
+[1]+  已停止               sleep 10000
+yh@yh-VMware-Virtual-Platform:~/桌面\$ bg
+[1]+ sleep 10000 \&
+}
+
+在终端中执行 sleep 10000 这个任务。然后用 Ctrl-Z 将其切换到后台并使用 bg 来继续允许它。使用 pgrep 来查找 pid 并使用 pkill 结束进程而不需要手动输入 pid。
+
+(2)\begin{verbatim}
+pgrep sleep #列出包含关键字 sleep 的进程的 pid
+pgrep sleep 10000 #列出包含关键字 sleep 的进程的 pid
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+yh@yh-VMware-Virtual-Platform:~/桌面\$ pgrep sleep
+6840
+yh@yh-VMware-Virtual-Platform:~/桌面\$ pgrep sleep 10000
+pgrep: only one pattern can be provided
+Try `pgrep --help' for more information.
+}  
+
+(3)\begin{verbatim}
+sleep 60 &
+pgrep sleep | wait; ls
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+[1] 5747
+yh@yh-VMware-Virtual-Platform:~/桌面\$ pgrep sleep | wait; ls
+'Host pi'  'Host pi.pub'
+}
+
+使用 sleep 60 \& 作为先执行的程序。一种方法是使用 wait 命令。尝试启动这个休眠命令，然后待其结束后再执行 ls 命令。
+
+(4)\begin{verbatim}
+pidwait()
+{
+   while kill -0 $1 #循环直到进程结束
+   do
+   sleep 1 
+   done
+   ls
+}
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+\{
+   while kill -0 \$1 \#循环直到进程结束
+   do
+   sleep 1 
+   done
+   ls
+\}
+[1]+  已完成               sleep 60
+}
+
+函数 pidwait ，它接受一个 pid 作为输入参数，然后一直等待直到该进程结束。您需要使用 sleep 来避免浪费 CPU 性能。
+
+(5)\begin{verbatim}
+alias dc=cd
+history | awk '{$1="";print substr($0,2)}' | sort | uniq -c | sort -n | tail -n 10
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+yh@yh-VMware-Virtual-Platform:~/桌面\$ history | awk '\{\$1="";print substr(\$0,2)\}' | sort | uniq -c | sort -n | tail -n 10
+      1 sleep 1 ; done; ls;
+      1 sleep 60 \&
+      1 source ~/.bashrc
+      1 ~source ~/.bashrc
+      1 ssh-copy-id pi@192.168.50.56
+      1 ssh-keygen -o -a 100 -t ed25519
+      1 touch yhh.txt
+      1 vi yhh.txt
+      2 history | awk '\{\$1="";print substr(\$0,2)\}' | sort | uniq -c | sort -n | tail -n 10
+      4 ls
+}
+
+创建一个 dc 别名，它的功能是当我们错误的将 cd 输入为 dc 时也能正确执行，获取最常用的十条命令。
+
+(6)\begin{verbatim}
+31595@ICEY MINGW64 / (master)
+$ (sleep 5 & echo $! > pid1.txt) & (sleep 10 & echo $! > pid2.txt) & wait
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+[1] 1015
+[2] 1016
+[1]-  Done                    ( sleep 5 \& echo \$! > pid1.txt )
+[2]+  Done                    ( sleep 10 \& echo \$! > pid2.txt )
+}
+
+这个命令同时运行两个 sleep 进程，并将它们的进程ID（PID）写入 pid1.txt 和 pid2.txt 文件。 wait 等待所有后台进程完成。
+
+(7)\begin{verbatim}
+sleep 30 & sleep 40 & jobs -l
+sleep 100 & jobs -l
+kill -STOP %1
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+\$ sleep 30 \& sleep 40 \& jobs -l
+[1] 1023
+[2] 1024
+[1]-  1023 Running                 sleep 30 \&
+[2]+  1024 Running                 sleep 40 \&
+
+[3] 1029
+[1]   1023 Done                    sleep 30
+[2]   1024 Done                    sleep 40
+[3]+  1029 Running                 sleep 100 \&
+bash: \$'E[200~sleep': command not found
+[3]+  Exit 127                sleep 100
+}
+
+该命令启动两个不同的 sleep 进程，并使用 jobs -l 显示所有后台进程及其 PID 和状态。然后启动一个 sleep 进程，并使用 kill -STOP %1 暂停第一个后台进程。
+
+(8)\begin{verbatim}
+kill -CONT %1
+(sleep 50 &> out.log & echo $! > pid.txt) &
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+\$ (sleep 50 \&> out.log \& echo \$! > pid.txt) \&
+[1] 1042
+[1]+  Done                    ( sleep 50 \&> out.log \& echo \$! > pid.txt )
+}
+
+如果之前某个进程被暂停，使用 kill -CONT %1 恢复该后台进程。然后启动 sleep 进程，将它的标准输出和错误输出重定向到 out.log，并将它的 PID 保存到 pid.txt 文件。
+
+(9)\begin{verbatim}
+sleep 200 & pid=$!; (sleep 10 && kill -9 $pid) &
+sleep 60 & jobs
+fg %1
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+\$ sleep 200 \& pid=\$!; (sleep 10 \&\& kill -9 \$pid) \&
+[1] 1048
+[2] 1049
+
+\$ sleep 60 \& jobs
+fg %1
+[3] 1055
+[1]   Killed                  sleep 200
+[2]   Done                    ( sleep 10 \&\& kill -9 \$pid )
+[3]+  Running                 sleep 60 \&
+}
+
+该命令启动一个 sleep 200 进程，并设置一个定时器 sleep 10 来在 10 秒后自动终止该进程。然后启动一个后台进程，并使用 fg 命令将第一个后台任务放回前台。
+
+(10)\begin{verbatim}
+sleep 120 & pid=$!; while kill -0 $pid 2> /dev/null; do ps -p $pid -o pid,%cpu,%mem,etime; sleep 2; done
+(sleep 50 && notify-send "Process complete") &
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+\$ (sleep 50 \&\& notify-send "Process complete") \&
+[1] 417
+}
+
+该命令启动一个 sleep 120 进程，并每两秒使用 ps 命令监控其 CPU、内存使用情况和运行时间，直到进程结束。然后在后台运行一个 sleep 进程，完成后通过 notify-send 发送通知。
+
+(11)\begin{verbatim}
+nice -n 10 sleep 30 & nice -n 5 sleep 40 & nice -n 0 sleep 50
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+[1] 879
+[2] 880
+[1]-  Done                    nice -n 10 sleep 30
+[2]+  Done                    nice -n 5 sleep 40
+}
+
+该命令使用 nice 设置不同优先级来同时启动 3 个 sleep 进程。
+
+(12)\begin{verbatim}
+ls -l > output.txt; tail -n 10 output.txt
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+total 8
+-rw-r--r-- 1 user user 1965 Sep  9 08:52 output.txt
+-rw-r--r-- 1 user user  591 Sep  9 08:52 script.py
+-rw-r--r-- 1 user user  436 Sep  9 08:52 test.txt
+-rw-r--r-- 1 user user  453 Sep  9 08:52 test1.txt
+}
+
+将 ls -l 的输出重定向到 output.txt 文件中，并使用 tail 命令查看文件的最后 10 行。
+
+\subsection{Python}
+(1)\begin{verbatim}
+python3 script.py --input=input.txt --output=output.txt --verbose
+python3 -c 'import sys; print(sys.version)' > python_version.txt
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+Python 3.12(64-bit)
+}
+
+这个命令运行一个名为 script.py 的Python脚本，并传递三个参数：input 输入文件、output 输出文件以及 verbose 选项用于控制详细输出，然后通过 -c 选项直接在命令行中运行Python代码，并将输出的Python版本号保存到 \texttt{python\_version.txt} 文件。
+
+(2)\begin{verbatim}
+python3 script1.py & python3 script2.py & python3 script3.py && wait
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+\$ t
+[1] 911
+[2] 912
+[1]-  Exit 49                 python3 script1.py
+[2]+  Exit 49                 python3 script2.py
+}
+
+该命令同时在后台运行三个Python脚本，使用 \& 表示在后台运行，wait 用于等待所有后台进程完成。
+
+(3)\begin{verbatim}
+python3 -m http.server 8080 --bind 127.0.0.1 --directory /path/to/dir &
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+/dir \&
+[1] 943
+[1]+  Exit 49                 python3 -m http.server 8080 --bind 127.0.0.1 --directory /path/to/dir
+}
+
+该命令在后台启动一个绑定到 127.0.0.1 的HTTP服务器，监听端口8080，并为 /path/to/dir 目录提供服务。
+
+(4)\begin{verbatim}
+31595@ICEY MINGW64 / (master)
+$ python -c '
+> from datetime import datetime
+> print("Current date and time:", datetime.now())
+> '
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+Current date and time: 2024-09-09 19:59:10.739870
+}
+
+打印当前的日期和时间。
+
+(5)\begin{verbatim}
+python -c '
+import random
+random_list = [random.randint(1, 100) for _ in range(5)]
+print("Random numbers:", random_list)
+'
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+Random numbers: [22, 65, 99, 22, 43]
+}
+
+打印一个随机数列表。
+
+(6)\begin{verbatim}
+python -c '
+def fibonacci(n):
+ if n <= 1:
+     return n
+ else:
+     return fibonacci(n-1) + fibonacci(n-2)
+fib_sequence = [fibonacci(x) for x in range(10)]
+print("Fibonacci sequence:", fib_sequence)
+'
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+Fibonacci sequence: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+}
+
+使用递归生成并打印前10个斐波那契数。
+
+(7)\begin{verbatim}
+python -c '
+from datetime import datetime
+hour = datetime.now().hour
+if 5 <= hour < 12:
+ greeting = "Good morning!"
+elif 12 <= hour < 18:
+ greeting = "Good afternoon!"
+else:
+ greeting = "Good evening!"
+print(greeting)
+'
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+Good evening!
+}
+
+根据当前时间动态生成问候语。
+
+(8)\begin{verbatim}
+python -c '
+import random
+flips = [random.choice(["Heads", "Tails"]) for _ in range(100)]
+heads_count = flips.count("Heads")
+tails_count = flips.count("Tails")
+print(f"Heads: {heads_count}, Tails: {tails_count}")
+'
+\end{verbatim}
+
+运行结果:
+{\color{blue}
+Heads: 48, Tails: 52
+}
+
+模拟抛硬币100次，计算正反面的出现次数。
+
+\subsection{Python视觉}
+
+(1)读取并显示图像。
+\begin{verbatim}
+import cv2
+image = cv2.imread("Atributes.png")
+cv2.imshow("Image", image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+\end{verbatim}
+
+运行结果：
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Attributes.png}  % 图片文件名
+    \caption{示例一运行结果}  % 图片标题
+\end{figure}
+
+(2)将图像转换为灰度并保存。
+\begin{verbatim}
+import cv2
+image = cv2.imread("Attributes.png")
+gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+cv2.imwrite("gray_image.jpg", gray_image)
+print("Gray image saved as gray_image.jpg")
+\end{verbatim}
+
+运行结果{\color{blue}
+Gray image saved as grayImage.jpg
+}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{grayImage.jpg}  % 图片文件名
+    \caption{示例二运行结果}  % 图片标题
+\end{figure}
+
+(3)在图像上绘制矩形和文本。
+\begin{verbatim}
+import cv2
+image = cv2.imread("image.jpg")
+cv2.rectangle(image, (50, 50), (200, 200), (0, 255, 0), 3)
+cv2.putText(image, "OpenCV", (70, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+cv2.imwrite("image_with_rectangle.jpg", image)
+print("Image with rectangle saved as image_with_rectangle.jpg")
+\end{verbatim}
+
+运行结果{\color{blue}
+Image with rectangle saved as imageWithRectangle.jpg
+}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{imageWithRectangle.jpg}  % 图片文件名
+    \caption{示例三运行结果}  % 图片标题
+\end{figure}
+
+(4)图像边缘检测
+\begin{verbatim}
+import cv2
+image = cv2.imread("image.jpg", cv2.IMREAD_GRAYSCALE)
+edges = cv2.Canny(image, 100, 200)
+cv2.imwrite("edges_image.jpg", edges)
+print("Edge-detected image saved as edges_image.jpg")
+\end{verbatim}
+
+运行结果{\color{blue}
+Edge-detected image saved as edgesRmage.jpg
+}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{edgesImage.jpg}  % 图片文件名
+    \caption{示例四运行结果}  % 图片标题
+\end{figure}
+
+
+\section{实验感悟}
+
+通过本次实验，我对计算机视觉领域有了更深入的了解，并且对Shell命令行环境和Python编程语言的应用能力有了显著提升。
+
+在实验的第一部分，我学习了如何在Shell命令行环境中进行基本操作。这包括文件的创建、复制、移动和删除，以及如何使用命令来查看和编辑文件内容。Shell的强大之处在于它的灵活性和效率，尤其是在处理大量数据和自动化任务时。通过实践，我体会到了命令行操作的便捷性，比如使用管道（|）和重定向（> 和 >>）来处理数据流。此外，我也认识到了熟练掌握Shell命令对于提高编程效率和处理复杂任务的重要性。
+
+在实验的第二部分，我探索了Python在计算机视觉领域的应用。通过使用Python的图像处理库，如OpenCV和PIL（Pillow），我学习了如何读取、处理和分析图像数据。实验中，我完成了图像的基本操作，如缩放、裁剪、旋转，以及更高级的操作，如颜色空间转换、边缘检测和特征提取。这些操作不仅加深了我对图像处理技术的理解，也激发了我对计算机视觉在实际应用中潜力的兴趣。
+
+
+
+\end{document}
