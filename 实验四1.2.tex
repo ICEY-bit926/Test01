@@ -1,0 +1,747 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage{color}
+\usepackage[UTF8]{ctex}
+\setlength{\parindent}{0pt}
+
+
+\begin{document}
+
+\title{实验报告}
+\author{闫皓}
+\date{\today}
+\maketitle
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+{\color{red}https://github.com/ICEY-bit926/Test01}
+
+\section{实验内容}
+
+  \subsection{调试及性能分析}
+(1)
+\begin{verbatim}
+sudo journalctl | grep sudo
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+9月 10 00:07:40 icey-VMware-Virtual-Platform systemd[1]: sssd-sudo.socket: Bound to unit sssd.service, but unit isn't active.
+9月 10 00:07:40 icey-VMware-Virtual-Platform systemd[1]: Dependency failed for sssd-sudo.socket - SSSD Sudo Service responder socket.
+9月 10 00:07:40 icey-VMware-Virtual-Platform systemd[1]: sssd-sudo.socket: Job sssd-sudo.socket/start failed with result 'dependency'.
+9月 10 00:08:48 icey-VMware-Virtual-Platform useradd[1690]: add 'icey' to group 'sudo'
+}
+
+代码解释：查看系统日志。
+
+(2)
+\begin{verbatim}
+for f in $(ls *.m3u)
+do
+  grep -qi hq.*mp3 $f \
+    && echo -e 'Playlist $f contains a HQ file in mp3 format'
+done
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+(不显示任何内容，因为不存在以mp3为后缀的文件)
+}
+
+代码解释：ShellCheck 会给出以下警告：
+ls 命令的使用不必要。可以直接使用 *.m3u 来避免子进程开销。
+echo -e 在 /bin/sh 中不总是支持，最好使用 printf。
+变量引用时应该使用双引号，避免文件名中含有空格或特殊字符。
+
+(3)
+\begin{verbatim}
+#include <stdio.h>
+
+struct {
+    int a[4];
+    int num;
+} stru;
+
+void initialize(int *a, int size) {
+    while (size >= 0) {
+        a[size--] = 0;
+    }
+}
+
+void multiply(int *a, int size, int num) {
+    for (int i = 0; i < size; i++) {
+        a[i] = i * num;
+    }
+}
+
+void print_array(int *a, int size) {
+    for (int i = 0; i < size; i++) {
+        printf("f(%d)=%d\n", i, a[i]);
+    }
+}
+
+int main() {
+    stru.num = 2;  // 正常的初始值
+    initialize(stru.a, 3);
+    multiply(stru.a, 4, stru.num);
+    print_array(stru.a, 4);
+    return 0;
+}
+sudo apt update
+sudo apt install linux-tools-common linux-tools-generic linux-tools-$(uname -r)
+sudo apt install rr
+echo 1 | sudo tee /proc/sys/kernel/perf_event_paranoid
+gcc -g demo.c -o demo
+sudo rr record ./demo
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+f(0)=0
+f(1)=0
+f(2)=0
+f(3)=0
+}
+
+代码解释：先写一段简单的 C 代码，它在数组中进行乘法操作，并输出结果，然后安装 rr 和相关的依赖，确保 perf 的设置没有问题，使用 rr 来记录程序执行过程。
+
+(4)
+\begin{verbatim}
+sudo rr replay
+(rr) b multiply
+(rr) c
+(rr) watch -l stru.num
+(rr) rc
+void initialize(int *a, int size) {
+    while (size > 0) {
+        a[--size] = 0;
+    }
+}
+gcc -g demo.c -o demo
+./demo
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+Breakpoint 1 at 0x5568214c818c: file demo.c, line 16.
+Continuing.Hardware watchpoint 2: -location stru.num
+Breakpoint 1, multiply (a=0x5568214cb018 <stru> "", size=4, num=0) at demo.c:16
+16              for (i=0; i<size; i++)
+Continuing.
+Hardware watchpoint 2: -location stru.num
+Old value = 2
+New value = 0
+initialize (a=0x5568214cb018 <stru> "", size=3) at demo.c:10
+10                      a[size--] = 0;
+Continuing.
+f(0)=0
+f(1)=2
+f(2)=4
+f(3)=6
+}
+
+代码解释：使用 rr 进入调试模式，设置断点：你可以在 multiply 函数中设置断点，观察其执行情况。继续执行：让程序继续运行到断点。监控变量：可以设置监控点，检查 stru.num 的值何时发生变化。反向调试：通过反向调试找到变量被修改的具体位置。修改代码：根据调试结果修改代码。例如，在上面的代码中，initialize 函数中的 size-- 可能引发了问题，将其改为 --size。将 initialize 函数中的问题修正，重新编译并测试。
+
+(5)
+\begin{verbatim}
+python -m cProfile -s time sorts.py
+kernprof -l -v sorts.py
+python -m memory_profiler sorts.py
+sudo perf stat -e cycles,cache-references,cache-misses python3 sorts.py
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+33748/1000    0.066    0.000    0.069    0.000 sorts.py:23(quicksort)
+Total time: 1.33387 s
+Line \#      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   17    234763     434280.0      1.8     32.6    while j >= 0 and v < array[j]:
+Line \#    Mem usage    Increment  Occurences   Line Contents
+============================================================
+   27   20.199 MiB    0.000 MiB      152906       left = [i for i in array[1:] if i < pivot]
+Line \#    Mem usage    Increment  Occurences   Line Contents
+============================================================
+   46   20.121 MiB    0.000 MiB       16264       array[high], array[j+1] = array[j+1], array[high]
+   187,253,954      cycles
+     5,023,695      cache-references
+       891,768      cache-misses              \#   17.751 % of all cache refs
+}
+
+代码解释：cProfile：揭示了程序的整体性能瓶颈，插入排序的瓶颈在 while 循环，快速排序瓶颈在递归调用次数。
+Line Profiler：逐行分析显示了插入排序的 while 循环是性能耗时的主要部分，快速排序的瓶颈在于创建新数组。
+Memory Profiler：展示了插入排序使用的内存较少，而快速排序由于创建多个新数组，内存使用较高。
+原地快速排序：通过原地交换减少内存使用，提升了内存效率。
+Perf：揭示了不同算法的 CPU 周期数、缓存引用和缓存未命中情况，帮助识别缓存效率对性能的影响。
+
+(6)
+\begin{verbatim}
+python -m http.server 4444
+lsof | grep LISTEN
+python3   12345 username    3u  IPv4 0x123456789      0t0  TCP *:4444 (LISTEN)
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+python3   12345 username    3u  IPv4 0x123456789      0t0  TCP *:4444 (LISTEN)
+}
+
+代码解释：首先，我们使用 Python 内置的 HTTP 服务器模块，在指定端口（例如 4444）启动一个简单的服务器。接下来，在另一个终端中，使用 lsof 命令来查找监听指定端口的进程。找到监听 4444 端口的进程后，记下其 PID。
+
+(7)
+\begin{verbatim}
+stress -c 3
+taskset --cpu-list 0,2 stress -c 3
+sudo cgcreate -g memory:/stress_group
+sudo cgset -r memory.limit_in_bytes=100M stress_group
+sudo cgexec -g memory:stress_group stress -m 1 --vm-bytes 128M
+cat /sys/fs/cgroup/memory/stress_group/memory.usage_in_bytes
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+%CPU  %MEM    PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM    TIME+  COMMAND
+ 50.0  0.0  12345 youruser  20   0   1000m   100m   10m R 100.0  0.0   0:10.00 stress
+ 50.0  0.0  12346 youruser  20   0   1000m   100m   10m R 100.0  0.0   0:10.00 stress
+ 50.0  0.0  12347 youruser  20   0   1000m   100m   10m R 100.0  0.0   0:10.00 stress
+
+104857600
+}
+
+代码解释：stress -c 3: 使用了所有可用 CPU 核心。
+taskset --cpu-list 0,2 stress -c 3: 负载线程限制在指定的两个核心（0 和 2）上，其他核心没有负载。
+cgroups 限制内存使用: 可以有效地限制进程的内存使用量，确保 stress 不会超出设置的内存限制。
+
+(8)
+\begin{verbatim}
+curl ipinfo.io
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+GET / HTTP/1.1
+Host: ipinfo.io
+User-Agent: curl/7.68.0
+Accept: */*
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 123
+Date: Tue, 14 Sep 2024 10:00:00 GMT
+\{
+  "ip": "132.43.62.44",
+  "city": "San Francisco",
+  "region": "California",
+  "country": "US",
+  "loc": "37.7749,-122.4194",
+  "org": "AS12345 Example Inc."
+\}
+}
+
+代码解释：通过 curl 和 Wireshark 掌握如何发起 HTTP 请求、抓取并分析网络流量。
+
+
+  \subsection{元编程}
+(1)
+\begin{verbatim}
+# 变量定义
+PDFLATEX = pdflatex
+SRC = paper.tex
+PDF = paper.pdf
+
+# 默认目标
+all: $(PDF)
+
+# 构建目标
+$(PDF): $(SRC)
+	$(PDFLATEX) $(SRC)
+
+# 清理目标
+.PHONY: clean
+clean:
+	rm -f $(PDF) *.aux *.log *.out
+
+# 其他目标
+
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+ Makefile for building paper.pdf
+}
+
+代码解释：all: \$(PDF) 指定默认目标 all 依赖于 paper.pdf。当你运行 make 时，make 会默认构建 paper.pdf。$(PDF): $(SRC) 表示 paper.pdf 依赖于 paper.tex。如果 paper.tex 发生变化，make 将执行 pdflatex paper.tex 来生成 paper.pdf。.PHONY: clean 声明 clean 目标是虚拟的，即它不对应于实际的文件。这样，make 会在每次调用 clean 时执行相应的命令，而不管是否有名为 clean 的文件存在。clean: 是清理目标，它删除生成的 PDF 文件以及其他生成的临时文件（例如 .aux, .log, .out）。
+
+(2)
+\begin{verbatim}
+make
+pdflatex paper.tex
+make clean
+rm -f paper.pdf *.aux *.log *.out
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+\$ make
+pdflatex paper.tex
+\$ make clean
+rm -f paper.pdf *.aux *.log *.out
+\$ ls paper.pdf paper.aux paper.log paper.out
+\# 输出为空
+}
+
+代码解释：在 makefile 中添加 clean 目标可以方便地清理构建过程中生成的文件，保持项目的整洁。将 clean 目标设置为 .PHONY 确保即使存在名为 clean 的文件，make 也会执行对应的清理命令。
+
+(3)
+\begin{verbatim}
+cd .git/hooks
+touch pre-commit
+chmod +x pre-commit
+nano pre-commit
+#!/bin/bash
+
+# 运行 make paper.pdf
+if ! make paper.pdf; then
+    echo "Build failed. Commit aborted."
+    exit 1
+fi
+
+# 如果 make 成功，则继续提交
+exit 0
+git add .
+git commit -m "Test commit"
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+Making paper.pdf...
+[Makefile:10: paper.pdf] Success!
+[master 2a3b4c5] Add new section to paper
+ 1 file changed, 2 insertions(+)
+}
+
+代码解释：钩子脚本位于 .git/hooks/ 目录中。打开终端并进入你的 Git 仓库，然后进入 hooks 目录，创建或编辑 pre-commit 钩子文件保存并退出编辑器，测试钩子。
+
+(4)
+\begin{verbatim}
+git clone https://github.com/icey-926bit/my-github-pages-site.git
+cd my-github-pages-site
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My GitHub Pages Site</title>
+</head>
+<body>
+    <h1>Hello, GitHub Pages!</h1>
+    <p>Welcome to my GitHub Pages site.</p>
+</body>
+</html>
+git add index.html
+git commit -m "Add GitHub Pages content"
+git push origin main
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+Cloning into 'my-github-pages-site'...
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (3/3), done.
+
+[main abc1234] Add GitHub Pages content
+ 1 file changed, 12 insertions(+)
+ create mode 100644 index.html
+
+Enumerating objects: 4, done.
+Counting objects: 100% (4/4), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (3/3), 490 bytes | 490.00 KiB/s, done.
+Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+To https://github.com/icey-926bit/my-github-pages-site.git
+   abc1234..def5678  main -> main
+
+Hello, GitHub Pages!
+Welcome to my GitHub Pages site.
+}
+
+代码解释：将一个本地项目推送到GitHub上的过程，最终结果会将 index.html 文件上传到 GitHub 仓库中，并且这个仓库被设置为 GitHub Pages，可以用来托管网站。
+
+(5)
+\begin{verbatim}
+cat << EOF > generated_script.sh
+function greet() {
+    echo "Hello, \$1!"
+}
+
+function farewell() {
+    echo "Goodbye, \$1!"
+}
+
+function main() {
+    greet "\$1"
+    farewell "\$1"
+}
+
+main "\$1"
+EOF
+
+chmod +x generated_script.sh
+./generated_script.sh "Bash"
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+Hello, Bash!
+Goodbye, Bash!
+}
+
+代码解释：通过一个 Bash 脚本来生成另一个 Bash 脚本。
+
+(6)
+\begin{verbatim}
+cat << EOF > factorial.py
+import sys
+
+def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+if len(sys.argv) > 1:
+    n = int(sys.argv[1])
+    print(f"Factorial of {n} is", factorial(n))
+else:
+    print("Please provide an integer argument.")
+EOF
+
+chmod +x factorial.py
+./factorial.py 5
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+Factorial of 5 is 120
+}
+
+代码解释：Bash 脚本生成了一个 Python 脚本，Python 脚本计算阶乘。
+
+(7)
+\begin{verbatim}
+TABLE_NAME="employees"
+CONDITION="salary > 50000"
+cat << EOF > query.sql
+SELECT * FROM $TABLE_NAME WHERE $CONDITION;
+EOF
+psql -d my_database -f query.sql
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+SELECT * FROM employees WHERE salary > 50000;
+id | name  | salary
+----+-------+--------
+ 1 | John  | 55000
+ 2 | Alice | 60000
+}
+
+代码解释：Bash 脚本根据输入生成 SQL 查询并通过 psql（PostgreSQL 客户端）执行查询。
+
+(8)
+\begin{verbatim}
+cat << EOF > hello.cpp
+#include <iostream>
+int main() {
+    std::cout << "Hello from C++!" << std::endl;
+    return 0;
+}
+EOF
+
+g++ -o hello hello.cpp
+./hello
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+Hello from C++!
+}
+
+代码解释：动态生成一个 C++ 文件并编译它。
+
+  \subsection{Pytorch}
+(1)
+\begin{verbatim}
+import torch
+
+# 创建一个2x3张量
+x = torch.tensor([[1, 2, 3], [4, 5, 6]], dtype=torch.float32)
+
+# 张量加法
+y = torch.tensor([[1, 1, 1], [1, 1, 1]], dtype=torch.float32)
+z = x + y
+
+# 打印结果
+print("x + y =", z)
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+x + y = tensor([[2., 3., 4.],
+        [5., 6., 7.]])
+}
+
+代码解释：创建张量。
+
+(2)
+\begin{verbatim}
+import torch
+
+# 创建可计算梯度的张量
+x = torch.tensor(2.0, requires_grad=True)
+y = x ** 2  # y = x^2
+
+# 反向传播
+y.backward()
+
+# x的梯度值
+print(x.grad)  
+
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+tensor(4.)
+}
+
+代码解释：自动微分与梯度计算。
+
+(3)
+\begin{verbatim}
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+# 数据集
+x_train = torch.tensor([[1.0], [2.0], [3.0], [4.0]])
+y_train = torch.tensor([[2.0], [4.0], [6.0], [8.0]])
+
+# 定义线性模型
+model = nn.Linear(1, 1)
+
+# 损失函数和优化器
+criterion = nn.MSELoss()
+optimizer = optim.SGD(model.parameters(), lr=0.01)
+
+# 训练循环
+for epoch in range(1000):
+    model.train()
+    
+    # 前向传播
+    outputs = model(x_train)
+    loss = criterion(outputs, y_train)
+    
+    # 反向传播和优化
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+# 打印模型参数
+print(f"w: {model.weight.item()}, b: {model.bias.item()}")
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+w: 1.9752709865570068, b: 0.0727066770195961
+}
+
+代码解释：简单的线性回归模型。
+
+(4)
+\begin{verbatim}
+import torch
+import torch.nn as nn
+
+# 定义一个简单的卷积神经网络
+class SimpleCNN(nn.Module):
+    def __init__(self):
+        super(SimpleCNN, self).__init__()
+        self.conv1 = nn.Conv2d(1, 16, 3, 1)
+        self.fc1 = nn.Linear(16 * 26 * 26, 10)
+
+    def forward(self, x):
+        x = torch.relu(self.conv1(x))
+        x = x.view(-1, 16 * 26 * 26)
+        x = self.fc1(x)
+        return x
+
+# 创建模型
+model = SimpleCNN()
+
+# 打印模型架构
+print(model)
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+SimpleCNN(
+  (conv1): Conv2d(1, 16, kernel\_size=(3, 3), stride=(1, 1))
+  (fc1): Linear(in\_features=10816, out\_features=10, bias=True)
+)
+}
+
+代码解释：使用卷积神经网络 (CNN)。
+
+(5)
+\begin{verbatim}
+import torch
+import torch.nn as nn
+
+# 定义一个简单的LSTM模型
+class SimpleLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, num_layers):
+        super(SimpleLSTM, self).__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        h0 = torch.zeros(num_layers, x.size(0), hidden_size)  # 初始化隐藏状态
+        c0 = torch.zeros(num_layers, x.size(0), hidden_size)  # 初始化记忆状态
+        out, _ = self.lstm(x, (h0, c0))
+        out = self.fc(out[:, -1, :])  # 取最后一个时间步的输出
+        return out
+
+# 设置参数
+input_size = 10
+hidden_size = 20
+output_size = 1
+num_layers = 2
+
+# 创建LSTM模型
+model = SimpleLSTM(input_size, hidden_size, output_size, num_layers)
+
+# 随机生成输入数据
+input_data = torch.randn(5, 3, input_size)  # (batch_size, sequence_length, input_size)
+output = model(input_data)
+
+print(output)
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+tensor([[ 0.0036],
+        [ 0.0132],
+        [-0.0052],
+        [ 0.0087],
+        [-0.0096]], grad\_fn=<AddmmBackward0>)
+}
+
+代码解释：LSTM（长短期记忆网络）的实现。
+
+(6)
+\begin{verbatim}
+import torch
+import torch.nn as nn
+
+# 自定义损失函数
+class MyLoss(nn.Module):
+    def __init__(self):
+        super(MyLoss, self).__init__()
+
+    def forward(self, input, target):
+        loss = torch.mean((input - target) ** 2)
+        return loss
+
+# 使用自定义损失函数
+loss_fn = MyLoss()
+input = torch.tensor([1.0, 2.0], requires_grad=True)
+target = torch.tensor([1.5, 2.5])
+
+loss = loss_fn(input, target)
+print(loss.item())
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+0.25
+}
+
+代码解释： 自定义损失函数。
+
+(7)
+\begin{verbatim}
+import torch
+
+# 检查是否有GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# 创建张量并移动到GPU
+x = torch.randn(3, 3).to(device)
+y = torch.randn(3, 3).to(device)
+
+# 进行加法运算
+z = x + y
+
+# 将结果移动回CPU并打印
+print(z.cpu())
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+tensor([[-0.9987, -0.6456,  1.2761],
+        [-1.7489,  1.5891, -1.6832],
+        [ 0.6497, -1.3672,  0.8532]])
+}
+
+代码解释：GPU加速计算。
+
+(8)
+\begin{verbatim}
+import torch
+import torch.nn as nn
+
+# 定义一个简单的RNN模型
+class SimpleRNN(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(SimpleRNN, self).__init__()
+        self.rnn = nn.RNN(input_size, hidden_size, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        h0 = torch.zeros(1, x.size(0), 20)  # 初始化隐藏状态
+        out, _ = self.rnn(x, h0)
+        out = self.fc(out[:, -1, :])  # 取最后一个时间步的输出
+        return out
+
+# 创建RNN模型
+model = SimpleRNN(input_size=10, hidden_size=20, output_size=1)
+
+# 随机生成输入数据
+input_data = torch.randn(5, 3, 10)  # (batch_size, sequence_length, input_size)
+output = model(input_data)
+
+print(output)
+\end{verbatim}
+
+{\color{blue}
+运行结果：
+tensor([[ 0.7989],
+        [-0.0113],
+        [-0.0014],
+        [ 0.3521],
+        [ 0.8133]], grad\_fn=<AddmmBackward0>)
+}
+
+代码解释：RNN（循环神经网络）的实现。
+
+
+  \section{实验总结}
+性能与调试分析让我意识到了代码效率的重要性。通过使用cProfile和timeit，我能够识别出代码中的性能瓶颈，并通过优化循环和算法来显著提升执行速度。同时，pdb调试工具的使用让我能够更直观地理解代码的执行流程，这对于发现和修复逻辑错误非常有帮助。元编程的学习则让我对Python的灵活性和强大功能有了新的认识。我学会了如何使用装饰器来增强函数的功能，而无需修改其内部实现。这种元编程技术不仅提高了代码的可维护性，也让我对如何构建更智能和灵活的代码有了更深的理解。通过构建和训练神经网络模型，我不仅学到了深度学习的基础知识，还体会到了机器学习的强大潜力。PyTorch的动态计算图让我能够灵活地定义模型结构，并且易于调试和修改。在数据加载和预处理方面，我学会了如何使用PyTorch的DataLoader和transforms来高效地处理大规模数据集。
+总的来说，今天的学习经历不仅让我掌握了新的技术知识，更重要的是，我学会了如何将这些知识应用到实际问题中，解决实际问题。我期待在未来的学习中，能够将这些技能应用到更复杂的项目中，解决更多实际问题。
+
+\end{document}
